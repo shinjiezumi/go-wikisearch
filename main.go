@@ -28,12 +28,18 @@ func main() {
 	flag.Parse()
 	word := flag.Arg(0)
 
+	// wikiツリー作成＋表示
+	wikiTree := createWikiTree(word)
+	printWikiTree(wikiTree, 0)
+}
+
+func createWikiTree(word string) (node *Node) {
 	var queue []*Node
 	var searchedWords []string
 
 	// ルートノード作成＋キューに追加
-	rootNode := Node{word: word, isSearched: false, isDuplicate: false}
-	queue = append(queue, &rootNode)
+	rootNode := &Node{word: word, isSearched: false, isDuplicate: false}
+	queue = append(queue, rootNode)
 
 	searchedCount := 0
 
@@ -45,15 +51,15 @@ func main() {
 			node.isDuplicate = true
 		} else if searchedCount < 20 {
 			if searchedCount > 0 {
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(1000 * time.Millisecond)
 			}
 
 			// wiki検索して子ノードのキーワードとして登録
 			words := searchWiki(node)
 			for _, childWord := range words {
-				childNode := Node{word: childWord}
-				node.appendChild(&childNode)
-				queue = append(queue, &childNode)
+				childNode := &Node{word: childWord}
+				node.appendChild(childNode)
+				queue = append(queue, childNode)
 			}
 			node.isSearched = true
 
@@ -63,7 +69,7 @@ func main() {
 		}
 	}
 
-	printNode(&rootNode, 0)
+	return rootNode
 }
 
 func searchWiki(node *Node) (words []string) {
@@ -93,17 +99,17 @@ func searchWiki(node *Node) (words []string) {
 	return words
 }
 
-func printNode(node *Node, layer int) {
-	postfix := ""
+func printWikiTree(node *Node, layer int) {
+	suffix := ""
 	if node.isDuplicate {
-		postfix = "@"
+		suffix = "@"
 	} else if !node.isSearched {
-		postfix = "$"
+		suffix = "$"
 	}
+	indent := strings.Repeat(" ", layer*2)
+	fmt.Printf("%s - %s%s\n", indent, node.word, suffix)
 
-	prefix := strings.Repeat(" ", layer*2) + " - "
-	fmt.Println(prefix + node.word + postfix)
 	for _, child := range node.children {
-		printNode(child, layer+1)
+		printWikiTree(child, layer+1)
 	}
 }
