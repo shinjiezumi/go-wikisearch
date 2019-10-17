@@ -88,12 +88,16 @@ func searchWiki(node *Node) (words []string) {
 	}
 
 	doc.Find(".mw-parser-output > p").First().Find("a").Each(func(i int, s *goquery.Selection) {
-		// hrefが/wiki/XXXのものを取得※英語除く
-		href, _ := s.Attr("href")
-		href, _ = url.QueryUnescape(href)
-		r := regexp.MustCompile("^/wiki/([^a-zA-z]*)$")
-		if r.MatchString(href) {
-			words = append(words, r.FindStringSubmatch(href)[1])
+		// hrefが/wiki/XXXのものを取得
+		if href, isExists := s.Attr("href"); isExists {
+			if href, err := url.QueryUnescape(href); err == nil {
+				r := regexp.MustCompile("^/wiki/(.*)$")
+				if r.MatchString(href) {
+					if word := r.FindStringSubmatch(href)[1]; word != "英語" {
+						words = append(words, word)
+					}
+				}
+			}
 		}
 	})
 	return words
